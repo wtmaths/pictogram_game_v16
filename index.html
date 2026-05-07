@@ -1,0 +1,2529 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>象形圖小助手</title>
+  <style>
+    * { box-sizing: border-box; font-family: "PingFang HK","Microsoft JhengHei",sans-serif; }
+
+    body {
+      background: #f0f8ff;
+      margin: 0;
+      padding: 15px;
+      text-align: center;
+      color: #2d3436;
+    }
+
+    .top-fixed-panel {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      z-index: 999;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: flex-end;
+      width: auto;
+      max-width: calc(100vw - 20px);
+    }
+
+    .ring-btn {
+      width: 82px;
+      height: 82px;
+      border: none;
+      background: rgba(255,255,255,0.92);
+      border-radius: 50%;
+      box-shadow: 0 6px 14px rgba(0,0,0,0.12);
+      position: relative;
+      cursor: pointer;
+      padding: 0;
+      transition: transform 0.2s ease, opacity 0.2s ease;
+      opacity: 0.88;
+    }
+
+    .ring-btn:hover {
+      transform: scale(1.04);
+      opacity: 1;
+    }
+
+    .ring-svg {
+      width: 82px;
+      height: 82px;
+      transform: rotate(-90deg);
+    }
+
+    .ring-bg {
+      fill: none;
+      stroke: #dfe6e9;
+      stroke-width: 10;
+    }
+
+    .ring-fill {
+      fill: none;
+      stroke-width: 10;
+      stroke-linecap: round;
+      stroke-dasharray: 301.59;
+      stroke-dashoffset: 301.59;
+      transition: stroke-dashoffset 0.4s ease;
+    }
+
+    .ring-fill-overall { stroke: #6c5ce7; }
+    .ring-fill-mode { stroke: #00b894; }
+
+    .ring-center {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+    .ring-percent {
+      font-size: 16px;
+      font-weight: bold;
+      color: #2d3436;
+      line-height: 1;
+    }
+
+    .ring-label {
+      font-size: 11px;
+      color: #636e72;
+      margin-top: 4px;
+    }
+
+    .progress-popup {
+      position: fixed;
+      top: 100px;
+      right: 10px;
+      z-index: 1000;
+      width: min(360px, calc(100vw - 20px));
+    }
+
+    .progress-popup-card {
+      background: rgba(255,255,255,0.98);
+      border: 3px solid #dfe6e9;
+      border-radius: 18px;
+      box-shadow: 0 10px 22px rgba(0,0,0,0.16);
+      padding: 14px;
+      text-align: left;
+    }
+
+    .progress-popup-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      font-weight: bold;
+      color: #2d3436;
+      font-size: 18px;
+    }
+
+    .popup-close-btn {
+      border: none;
+      background: #ff7675;
+      color: white;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .popup-close-btn:hover {
+      background: #d63031;
+    }
+
+    .panel-card {
+      background: transparent;
+      border-radius: 16px;
+      padding: 0;
+      text-align: left;
+    }
+
+    .panel-title {
+      font-size: 16px;
+      font-weight: bold;
+      color: #2d3436;
+      margin-bottom: 6px;
+    }
+
+    .panel-line {
+      font-size: 14px;
+      line-height: 1.55;
+      color: #2d3436;
+      margin: 2px 0;
+    }
+
+    .panel-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 4px;
+    }
+
+    .mini-reset {
+      margin-top: 10px;
+      padding: 8px 12px;
+      border: none;
+      border-radius: 10px;
+      background: #ff7675;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    .mini-reset:hover { background: #d63031; }
+
+    .home-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      width: 100%;
+      background: #f0f8ff;
+      padding-top: 100px;
+    }
+
+    .home-title {
+      font-size: 36px;
+      color: #ff6b6b;
+      margin-bottom: 10px;
+      text-shadow: 2px 2px 0px #ffeaa7;
+    }
+
+    .home-subtitle {
+      font-size: 20px;
+      color: #636e72;
+      margin-bottom: 24px;
+    }
+
+    .mode-btn {
+      font-size: 24px;
+      padding: 15px 40px;
+      margin: 12px;
+      border-radius: 20px;
+      border: none;
+      cursor: pointer;
+      color: white;
+      box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+      transition: 0.3s;
+      font-weight: bold;
+      width: 340px;
+      max-width: 90%;
+    }
+
+    .mode-btn:hover {
+      transform: translateY(-3px) scale(1.05);
+    }
+
+    .mode-normal { background: #00b894; }
+    .mode-normal:hover { background: #00a884; }
+    .mode-challenge { background: #ff7675; }
+    .mode-challenge:hover { background: #d63031; }
+    .mode-theme1 { background: #6c5ce7; }
+    .mode-theme1:hover { background: #5848c2; }
+    .mode-theme2 { background: #0984e3; }
+    .mode-theme2:hover { background: #0873c4; }
+    .mode-theme3 { background: #fdcb6e; color: #2d3436; }
+    .mode-theme3:hover { background: #e8b95f; }
+    .mode-theme4 { background: #00cec9; }
+    .mode-theme4:hover { background: #00b4af; }
+
+    .small-btn {
+      font-size: 18px;
+      padding: 10px 24px;
+      margin-top: 18px;
+      border-radius: 14px;
+      border: none;
+      cursor: pointer;
+      background: #636e72;
+      color: white;
+      font-weight: bold;
+    }
+
+    .small-btn:hover { background: #4d565b; }
+
+    .header-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      max-width: 980px;
+      margin: 80px auto 12px;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    h1 {
+      color: #ff6b6b;
+      font-size: 26px;
+      text-shadow: 1px 1px 0px #ffeaa7;
+      margin: 0;
+    }
+
+    h2 {
+      color: #0984e3;
+      margin-top: 0;
+      font-size: 22px;
+    }
+
+    .instruction {
+      font-size: 16px;
+      color: #636e72;
+      margin-bottom: 15px;
+    }
+
+    .level-container {
+      display: none;
+      background: white;
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 20px;
+      border-radius: 20px;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+
+    .level-container.active {
+      display: block;
+      animation: fadeIn 0.5s ease-in;
+    }
+
+    .btn-next {
+      background: #00b894;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-size: 20px;
+      border-radius: 10px;
+      cursor: pointer;
+      margin-top: 20px;
+      transition: 0.2s;
+      display: none;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .btn-next:hover {
+      transform: scale(1.05);
+      background: #00a884;
+    }
+
+    .messy-area {
+      min-height: 150px;
+      background: #ffeaa7;
+      border-radius: 15px;
+      padding: 15px;
+      margin-bottom: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      border: 4px solid #fdcb6e;
+    }
+
+    .basket-area {
+      display: flex;
+      justify-content: space-around;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .basket {
+      width: 18%;
+      min-width: 120px;
+      min-height: 180px;
+      border: 3px dashed #74b9ff;
+      border-radius: 15px;
+      background: #dfe6e9;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .basket-title {
+      font-weight: bold;
+      font-size: 18px;
+      margin-bottom: 10px;
+      pointer-events: none;
+    }
+
+    .basket-dropzone {
+      width: 100%;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 3px;
+      pointer-events: none;
+    }
+
+    .fruit-item {
+      font-size: 35px;
+      cursor: grab;
+      user-select: none;
+      touch-action: none;
+      transition: transform 0.1s;
+      display: inline-block;
+      line-height: 1;
+      padding: 2px;
+      border-radius: 10px;
+    }
+
+    .fruit-item:active {
+      cursor: grabbing;
+      transform: scale(1.1);
+    }
+
+    .fruit-item.selected {
+      border: 3px dashed #d63031;
+      transform: scale(1.1);
+      background: rgba(255,255,255,0.5);
+    }
+
+    .chart-title {
+      font-size: 24px;
+      font-weight: bold;
+      color: #6c5ce7;
+      margin-bottom: 12px;
+      background: #efe8ff;
+      display: inline-block;
+      padding: 8px 18px;
+      border-radius: 18px;
+      border: 3px solid #c8b6ff;
+    }
+
+    .chart-legend {
+      font-size: 18px;
+      font-weight: bold;
+      background: #ff7675;
+      color: white;
+      display: inline-block;
+      padding: 6px 15px;
+      border-radius: 20px;
+      margin-bottom: 15px;
+    }
+
+    .supply-area {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      min-height: 60px;
+      padding: 10px;
+      background: #fab1a0;
+      border-radius: 15px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .chart-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 0 auto;
+      width: fit-content;
+      max-width: 100%;
+      overflow-x: auto;
+    }
+
+    .chart-graph-area {
+      display: flex;
+      align-items: flex-end;
+      border-bottom: 4px solid #2d3436;
+      padding-bottom: 0px;
+      min-width: 430px;
+    }
+
+    .y-axis {
+      display: flex;
+      flex-direction: column;
+      height: 450px;
+      width: 30px;
+      margin-right: 10px;
+    }
+
+    .y-label {
+      height: 45px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      font-weight: bold;
+      font-size: 18px;
+      color: #636e72;
+    }
+
+    .chart-column {
+      width: 70px;
+      height: 450px;
+      border-left: 2px dashed #b2bec3;
+      border-right: 2px dashed #b2bec3;
+      background: #fdfbfb;
+      display: flex;
+      flex-direction: column-reverse;
+      justify-content: flex-start;
+      cursor: pointer;
+      margin: 0 5px;
+      transition: 0.2s;
+    }
+
+    .chart-slot {
+      width: 100%;
+      height: 45px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 32px;
+      border-bottom: 1px dotted #dfe6e9;
+      box-sizing: border-box;
+    }
+
+    .chart-x-icons {
+      display: flex;
+      width: 100%;
+      margin-top: 10px;
+    }
+
+    .y-axis-spacer {
+      width: 30px;
+      margin-right: 10px;
+    }
+
+    .chart-icon-wrapper {
+      width: 70px;
+      margin: 0 5px;
+      text-align: center;
+      font-size: 30px;
+      font-weight: bold;
+      line-height: 1.2;
+    }
+
+    .chart-icon-label {
+      font-size: 16px;
+      color: #2d3436;
+      margin-top: 6px;
+      word-break: break-word;
+    }
+
+    .question-card {
+      background: #81ecec;
+      padding: 20px;
+      border-radius: 15px;
+      margin-bottom: 20px;
+      font-size: 22px;
+      font-weight: bold;
+      color: #0097e6;
+    }
+
+    .options-area {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    .option-btn {
+      font-size: 20px;
+      padding: 10px 20px;
+      border: 3px solid #00cec9;
+      background: white;
+      color: #2d3436;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: 0.2s;
+      font-weight: bold;
+    }
+
+    .option-btn:hover {
+      background: #00cec9;
+      color: white;
+    }
+
+    .result-msg {
+      font-size: 22px;
+      font-weight: bold;
+      min-height: 35px;
+      margin-top: 15px;
+    }
+
+    .top-tools {
+      max-width: 980px;
+      margin: 0 auto 15px;
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .tool-btn {
+      border: none;
+      border-radius: 12px;
+      padding: 10px 18px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      color: white;
+      background: #6c5ce7;
+    }
+
+    .tool-btn:hover { background: #5649b6; }
+
+    .completion-note {
+      font-size: 20px;
+      color: #636e72;
+      margin-top: 10px;
+      line-height: 1.6;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0px); }
+    }
+
+    @media (max-width: 768px) {
+      body { padding: 10px; }
+      .top-fixed-panel {
+        top: 8px;
+        right: 8px;
+        gap: 8px;
+      }
+      .ring-btn {
+        width: 72px;
+        height: 72px;
+      }
+      .ring-svg {
+        width: 72px;
+        height: 72px;
+      }
+      .ring-percent { font-size: 14px; }
+      .ring-label { font-size: 10px; }
+      .progress-popup {
+        top: 88px;
+        right: 8px;
+      }
+      .home-screen { padding-top: 170px; }
+      .basket { width: 30%; min-width: 100px; }
+      .chart-column { width: 60px; }
+      .chart-icon-wrapper { width: 60px; font-size: 26px; }
+      .mode-btn { font-size: 20px; padding: 14px 20px; }
+      .home-title { font-size: 30px; }
+      .question-card { font-size: 20px; }
+      .header-container { margin-top: 150px; }
+      .chart-title { font-size: 20px; }
+    }
+  
+    .top-fixed-panel {
+      flex-wrap: wrap;
+    }
+
+    .score-chip {
+      min-width: 146px;
+      min-height: 92px;
+      padding: 14px 18px 12px;
+      border-radius: 28px;
+      background: linear-gradient(180deg, #fff3bf 0%, #ffd43b 45%, #fab005 100%);
+      box-shadow: 0 7px 0 #e67700, 0 14px 24px rgba(0,0,0,0.18);
+      border: 4px solid #fff9db;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #5f3b00;
+      pointer-events: none;
+      position: relative;
+      transform: rotate(-2deg);
+      overflow: visible;
+    }
+
+    .score-chip::before,
+    .score-chip::after {
+      content: '⭐';
+      position: absolute;
+      top: -10px;
+      font-size: 22px;
+      filter: drop-shadow(0 2px 0 rgba(255,255,255,0.6));
+    }
+
+    .score-chip::before {
+      left: 12px;
+      transform: rotate(-15deg);
+    }
+
+    .score-chip::after {
+      right: 12px;
+      transform: rotate(15deg);
+    }
+
+    .score-chip-label {
+      font-size: 14px;
+      color: #8d5b00;
+      line-height: 1;
+      margin-bottom: 6px;
+      font-weight: 900;
+      letter-spacing: 1px;
+      text-shadow: 0 1px 0 rgba(255,255,255,0.55);
+    }
+
+    .score-chip-value {
+      font-size: 34px;
+      line-height: 1;
+      color: #d9480f;
+      font-weight: 900;
+      font-variant-numeric: tabular-nums;
+      text-shadow: 0 2px 0 rgba(255,255,255,0.45);
+    }
+
+    .score-burst {
+      position: fixed;
+      top: 92px;
+      right: 18px;
+      z-index: 1002;
+      background: rgba(0, 184, 148, 0.92);
+      color: white;
+      font-weight: 900;
+      padding: 8px 12px;
+      border-radius: 999px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.18);
+      opacity: 0;
+      transform: translateY(8px) scale(0.92);
+      pointer-events: none;
+      transition: opacity 0.18s ease, transform 0.35s ease;
+    }
+
+    .score-burst.show {
+      opacity: 1;
+      transform: translateY(-8px) scale(1);
+    }
+
+    .question-toolbar {
+      display: flex;
+      justify-content: center;
+      margin: 12px 0 8px;
+    }
+
+    .read-btn {
+      border: none;
+      border-radius: 14px;
+      background: #00b894;
+      color: white;
+      font-size: 18px;
+      font-weight: bold;
+      padding: 10px 18px;
+      cursor: pointer;
+      box-shadow: 0 6px 12px rgba(0,184,148,0.22);
+    }
+
+    .read-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+  
+    @keyframes bounceIn {
+      0% { opacity: 0; transform: translate(-50%, -50%) scale(0.3); }
+      50% { opacity: 1; transform: translate(-50%, -50%) scale(1.05); }
+      70% { transform: translate(-50%, -50%) scale(0.9); }
+      100% { transform: translate(-50%, -50%) scale(1); }
+    }
+    .success-modal {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 2000;
+      background: #ffffff;
+      border: 4px solid #00b894;
+      border-radius: 20px;
+      padding: 30px 40px;
+      text-align: center;
+      box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+      display: none;
+      animation: bounceIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .success-modal-backdrop {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 1999;
+      display: none;
+    }
+    .success-modal h2 { color: #00b894; font-size: 32px; margin: 0 0 15px 0; }
+    .success-modal p { font-size: 24px; color: #2d3436; margin: 0 0 10px 0; }
+    .success-modal-timer { font-size: 18px; color: #636e72; font-weight: bold; }
+
+    .hint-btn {
+      background: #fdcb6e;
+      color: #2d3436;
+      border: 3px solid #e1b12c;
+      border-radius: 12px;
+      padding: 10px 20px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 15px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      transition: 0.2s;
+    }
+    .hint-btn:hover { background: #e1b12c; transform: scale(1.05); }
+    .hint-highlight {
+      background-color: #ffeaa7 !important;
+      border: 2px dashed #d63031 !important;
+    }
+    .hint-line {
+      position: absolute;
+      border-bottom: 3px dashed #d63031;
+      width: 100%;
+      left: 0;
+      z-index: 10;
+      pointer-events: none;
+    }
+    .chart-slot { position: relative; } /* needed for hint lines if we put them inside */
+    .y-label.hint-highlight-y {
+      color: #d63031;
+      font-weight: 900;
+      background: #ffeaa7;
+      border-radius: 5px;
+    }
+
+
+    #btn-read-question {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 1000;
+      background: #0984e3;
+      color: white;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+      border-radius: 30px;
+      padding: 12px 24px;
+      font-size: 20px;
+      font-weight: bold;
+      border: 3px solid #ffffff;
+      display: none; 
+      cursor: pointer;
+      transition: transform 0.2s, background 0.2s;
+    }
+    #btn-read-question:hover {
+      transform: scale(1.08);
+      background: #0873c4;
+    }
+
+    .keyword-highlight {
+      color: #d63031;
+      font-weight: 900;
+      background: #ffeaa7;
+      padding: 0 6px;
+      border-radius: 6px;
+      box-shadow: 0 2px 0 #fdcb6e;
+    }
+</style>
+</head>
+<body>
+
+  
+
+
+  <div class="top-fixed-panel">
+    <div class="score-chip" aria-live="polite" aria-atomic="true">
+      <div class="score-chip-label">星星分數</div>
+      <div class="score-chip-value" id="score-chip-value">0</div>
+    </div>
+    <button class="ring-btn" onclick="toggleProgressPopup()">
+      <svg class="ring-svg" viewBox="0 0 120 120">
+        <circle class="ring-bg" cx="60" cy="60" r="48"></circle>
+        <circle id="overall-ring" class="ring-fill ring-fill-overall" cx="60" cy="60" r="48"></circle>
+      </svg>
+      <div class="ring-center">
+        <div class="ring-percent" id="overall-percent">0%</div>
+        <div class="ring-label">總進度</div>
+      </div>
+    </button>
+
+    <button class="ring-btn" onclick="toggleProgressPopup()">
+      <svg class="ring-svg" viewBox="0 0 120 120">
+        <circle class="ring-bg" cx="60" cy="60" r="48"></circle>
+        <circle id="mode-ring" class="ring-fill ring-fill-mode" cx="60" cy="60" r="48"></circle>
+      </svg>
+      <div class="ring-center">
+        <div class="ring-percent" id="mode-percent">0%</div>
+        <div class="ring-label">模式</div>
+      </div>
+    </button>
+  </div>
+
+  <div id="progress-popup" class="progress-popup" style="display:none;">
+    <div class="progress-popup-card">
+      <div class="progress-popup-header">
+        <span>📊 詳細進度</span>
+        <button class="popup-close-btn" onclick="toggleProgressPopup(false)">✕</button>
+      </div>
+
+      <div class="panel-card" style="margin-bottom:12px;">
+        <div class="panel-title">玩家總進度</div>
+        <div class="panel-line">總分：<span id="global-score">0</span></div>
+        <div class="panel-line">目前模式：<span id="current-mode-label">未開始</span></div>
+        <div class="panel-line">目前主題：<span id="current-theme-label">未開始</span></div>
+        <div class="panel-line">已完成主題：<span id="overall-progress-text">0/16</span></div>
+      </div>
+
+      <div class="panel-card">
+        <div class="panel-title">模式完成進度</div>
+        <div class="panel-grid">
+          <div class="panel-line">普通任務：<span id="progress-normal-full">0/4</span></div>
+          <div class="panel-line">普通問答：<span id="progress-normal-question">0/4</span></div>
+          <div class="panel-line">挑戰任務：<span id="progress-challenge-full">0/4</span></div>
+          <div class="panel-line">挑戰問答：<span id="progress-challenge-question">0/4</span></div>
+          <div class="panel-line">已完成模式：<span id="mode-progress-text">0/4</span></div>
+        </div>
+        <button class="mini-reset" onclick="resetAllProgress()">重設所有進度</button>
+      </div>
+    </div>
+  </div>
+  <div id="score-burst" class="score-burst" aria-hidden="true"></div>
+
+  <div id="home-screen" class="home-screen">
+    <h1 class="home-title">📊 象形圖小助手</h1>
+    <div class="home-subtitle">右上會以圓環顯示整體進度</div>
+
+    <button class="mode-btn mode-normal" onclick="goThemeSelect('full','normal')">🌟 普通版：象形圖任務模式</button>
+    <button class="mode-btn mode-challenge" onclick="goThemeSelect('question','normal')">✏️ 普通版：文字問答題</button>
+
+    <div style="height:16px;"></div>
+    <div class="home-subtitle" style="margin-bottom:10px;">進階選項</div>
+    <button class="mode-btn mode-theme1" onclick="goThemeSelect('full','challenge')">🔥 挑戰版：象形圖任務模式</button>
+    <button class="mode-btn mode-theme2" onclick="goThemeSelect('question','challenge')">🧠 挑戰版：文字問答題</button>
+  </div>
+
+  <div id="theme-screen" class="home-screen" style="display:none;">
+    <h1 class="home-title">🎯 選擇起始主題</h1>
+    <div class="home-subtitle">完成後會自動切換到未完成主題，再跳到未玩模式</div>
+
+    <button class="mode-btn mode-theme1" onclick="selectTheme('fruits')">🍎 水果</button>
+    <button class="mode-btn mode-theme2" onclick="selectTheme('animals')">🐶 動物</button>
+    <button class="mode-btn mode-theme3" onclick="selectTheme('stationery')">✏️ 文具</button>
+    <button class="mode-btn mode-theme4" onclick="selectTheme('transport')">🚌 交通工具</button>
+
+    <button class="small-btn" onclick="backToHome()">返回首頁</button>
+  </div>
+
+  <div id="game-container" style="display:none;">
+    <div class="header-container">
+      <h1 id="game-title">📊 象形圖小助手</h1>
+    </div>
+
+    <div class="top-tools">
+      <button class="tool-btn" onclick="backToThemeSelect()">返回主題頁</button>
+      <button class="tool-btn" onclick="goHome()">返回首頁</button>
+    </div>
+
+    <div id="level-1" class="level-container">
+      <h2 id="level1-title">任務一：收集與分類 🧺</h2>
+      <p class="instruction" id="level1-instruction">點擊或拖曳物件到正確的位置。分類正確可得 <strong>5分</strong></p>
+
+      <div id="messy-area" class="messy-area"></div>
+      <div class="basket-area" id="basket-area"></div>
+
+      <button id="btn-next-1" class="btn-next" onclick="goToLevel2()">分類完成，去畫圖表 ➡️</button>
+    </div>
+
+    <div id="level-23" class="level-container">
+      <h2 id="level-title">任務二：建立象形圖 📊</h2>
+      <p id="level-instruction" class="instruction">將物件由下至上疊加在圖表中。放對位置得 <strong>5分</strong></p>
+
+      <div id="chart-title" class="chart-title">同學最喜愛的水果</div>
+      <div class="chart-legend">📝 一個圖形代表 1 個單位</div>
+      <div id="supply-area" class="supply-area"></div>
+
+      <div class="chart-container">
+        <div class="chart-graph-area" id="chart-graph-area">
+          <div class="y-axis">
+            <div class="y-label">10</div>
+            <div class="y-label">9</div>
+            <div class="y-label">8</div>
+            <div class="y-label">7</div>
+            <div class="y-label">6</div>
+            <div class="y-label">5</div>
+            <div class="y-label">4</div>
+            <div class="y-label">3</div>
+            <div class="y-label">2</div>
+            <div class="y-label">1</div>
+          </div>
+        </div>
+
+        <div class="chart-x-icons" id="chart-x-icons">
+          <div class="y-axis-spacer"></div>
+        </div>
+      </div>
+
+      <div id="hint-area" style="display:none; text-align:center; width: 100%;">
+        <button id="btn-show-hint" class="hint-btn" onclick="showVisualHint()">💡 視覺提示</button>
+      </div>
+
+      <button id="btn-next-2" class="btn-next" onclick="goToLevel3()">完成圖表，開始分析 ➡️</button>
+
+      <div id="question-container" style="display:none; margin-top:20px; border-top:3px dashed #dfe6e9; padding-top:20px;">
+        
+        <div class="question-card" id="q-text" style="margin-top:0;">問題加載中...</div>
+        <div class="options-area" id="q-options"></div>
+        <div class="result-msg" id="q-msg"></div>
+      </div>
+    </div>
+  </div>
+
+  
+  <div id="success-backdrop" class="success-modal-backdrop"></div>
+  <div id="success-modal" class="success-modal">
+    <h2>🎉 答對了！</h2>
+    <p id="success-score-msg"></p>
+    <div id="success-timer" class="success-modal-timer">5 秒後繼續...</div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'xiangxingtu_player_progress_v4';
+    const THEME_ORDER = ['fruits', 'animals', 'stationery', 'transport'];
+    const MODE_ORDER = [
+      'normal-full',
+      'normal-question',
+      'challenge-full',
+      'challenge-question'
+    ];
+
+    const THEMES = {
+      fruits: {
+        title: '🍎 水果店終極小助手 📊',
+        chartTitle: '同學最喜愛的水果',
+        taskLabel: '水果',
+        items: [
+          { type: 'apple', emoji: '🍎', name: '蘋果' },
+          { type: 'banana', emoji: '🍌', name: '香蕉' },
+          { type: 'grape', emoji: '🍇', name: '葡萄' },
+          { type: 'orange', emoji: '🍊', name: '橙' },
+          { type: 'strawberry', emoji: '🍓', name: '士多啤梨' }
+        ]
+      },
+      animals: {
+        title: '🐶 動物園小助手 📊',
+        chartTitle: '同學最喜愛的動物',
+        taskLabel: '動物',
+        items: [
+          { type: 'cat', emoji: '🐱', name: '貓' },
+          { type: 'dog', emoji: '🐶', name: '狗' },
+          { type: 'rabbit', emoji: '🐰', name: '兔子' },
+          { type: 'bear', emoji: '🐻', name: '熊' },
+          { type: 'monkey', emoji: '🐵', name: '猴子' }
+        ]
+      },
+      stationery: {
+        title: '✏️ 文具店小助手 📊',
+        chartTitle: '同學最喜愛的文具',
+        taskLabel: '文具',
+        items: [
+          { type: 'pencil', emoji: '✏️', name: '鉛筆' },
+          { type: 'pen', emoji: '🖊️', name: '原子筆' },
+          { type: 'book', emoji: '📘', name: '書本' },
+          { type: 'ruler', emoji: '📏', name: '間尺' },
+          { type: 'scissors', emoji: '✂️', name: '剪刀' }
+        ]
+      },
+      transport: {
+        title: '🚌 交通工具小助手 📊',
+        chartTitle: '同學最喜愛的交通工具',
+        taskLabel: '交通工具',
+        items: [
+          { type: 'car', emoji: '🚗', name: '私家車' },
+          { type: 'bus', emoji: '🚌', name: '巴士' },
+          { type: 'taxi', emoji: '🚕', name: '的士' },
+          { type: 'train', emoji: '🚆', name: '火車' },
+          { type: 'bicycle', emoji: '🚲', name: '單車' }
+        ]
+      }
+    };
+
+    function createEmptyProgressData() {
+      return {
+        totalScore: 0,
+        currentMode: '',
+        currentTheme: '',
+        modes: {
+          'normal-full': { completedThemes: [], score: 0 },
+          'normal-question': { completedThemes: [], score: 0 },
+          'challenge-full': { completedThemes: [], score: 0 },
+          'challenge-question': { completedThemes: [], score: 0 }
+        }
+      };
+    }
+
+    let progressData = createEmptyProgressData();
+
+    let fruitsData = [];
+    let difficultyMode = 'normal';
+    let playMode = 'full';
+    let selectedTheme = '';
+
+    let selectedItem = null;
+    let totalScore = 0;
+    let questions = [];
+    let currentQ = 0;
+    let scoreStreak = 0;
+    let currentSpeechText = '';
+    let audioCtx = null;
+
+    let themeSequence = [];
+    let currentThemeIndex = 0;
+    let autoNextTimer = null;
+
+    let lastStartTheme = '';
+    let lastDifficulty = 'normal';
+    let lastPlayMode = 'full';
+
+    function getModeKey(difficulty, mode) {
+      return `${difficulty}-${mode}`;
+    }
+
+    function getModeLabelByKey(modeKey) {
+      const map = {
+        'normal-full': '普通任務',
+        'normal-question': '普通問答',
+        'challenge-full': '挑戰任務',
+        'challenge-question': '挑戰問答'
+      };
+      return map[modeKey] || '未開始';
+    }
+
+    function getCurrentModeKey() {
+      return getModeKey(difficultyMode, playMode);
+    }
+
+    function getThemeName(themeKey) {
+      return THEMES[themeKey]?.taskLabel || '';
+    }
+
+    function getChartTitle(themeKey) {
+      return THEMES[themeKey]?.chartTitle || '同學最喜愛的物品';
+    }
+
+    function saveProgress() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(progressData));
+    }
+
+    function loadProgress() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) {
+          progressData = createEmptyProgressData();
+          return;
+        }
+
+        const parsed = JSON.parse(raw);
+        progressData = createEmptyProgressData();
+
+        if (typeof parsed.totalScore === 'number') progressData.totalScore = parsed.totalScore;
+        if (typeof parsed.currentMode === 'string') progressData.currentMode = parsed.currentMode;
+        if (typeof parsed.currentTheme === 'string') progressData.currentTheme = parsed.currentTheme;
+
+        MODE_ORDER.forEach(modeKey => {
+          if (parsed.modes && parsed.modes[modeKey]) {
+            const item = parsed.modes[modeKey];
+            progressData.modes[modeKey].completedThemes = Array.isArray(item.completedThemes)
+              ? item.completedThemes.filter(t => THEME_ORDER.includes(t))
+              : [];
+            progressData.modes[modeKey].score = typeof item.score === 'number' ? item.score : 0;
+          }
+        });
+      } catch (e) {
+        progressData = createEmptyProgressData();
+      }
+    }
+
+    function setRingProgress(circleId, percent) {
+      const circle = document.getElementById(circleId);
+      const radius = 48;
+      const circumference = 2 * Math.PI * radius;
+      const offset = circumference * (1 - percent / 100);
+      circle.style.strokeDasharray = `${circumference}`;
+      circle.style.strokeDashoffset = `${offset}`;
+    }
+
+    function getCompletedThemeCount() {
+      return MODE_ORDER.reduce((sum, modeKey) => {
+        return sum + progressData.modes[modeKey].completedThemes.length;
+      }, 0);
+    }
+
+    function getCompletedModeCount() {
+      return MODE_ORDER.filter(modeKey => progressData.modes[modeKey].completedThemes.length === 4).length;
+    }
+
+    function updateRingProgress() {
+      const completedThemes = getCompletedThemeCount();
+      const completedModes = getCompletedModeCount();
+
+      const overallPercent = Math.round((completedThemes / 16) * 100);
+      const modePercent = Math.round((completedModes / 4) * 100);
+
+      document.getElementById('overall-percent').textContent = `${overallPercent}%`;
+      document.getElementById('mode-percent').textContent = `${modePercent}%`;
+
+      document.getElementById('overall-progress-text').textContent = `${completedThemes}/16`;
+      document.getElementById('mode-progress-text').textContent = `${completedModes}/4`;
+
+      setRingProgress('overall-ring', overallPercent);
+      setRingProgress('mode-ring', modePercent);
+    }
+
+    function updateAllProgressPanels() {
+      document.getElementById('global-score').textContent = progressData.totalScore;
+      const scoreChip = document.getElementById('score-chip-value');
+      if (scoreChip) scoreChip.textContent = progressData.totalScore;
+      document.getElementById('current-mode-label').textContent = progressData.currentMode ? getModeLabelByKey(progressData.currentMode) : '未開始';
+      document.getElementById('current-theme-label').textContent = progressData.currentTheme ? getThemeName(progressData.currentTheme) : '未開始';
+
+      document.getElementById('progress-normal-full').textContent = `${progressData.modes['normal-full'].completedThemes.length}/4`;
+      document.getElementById('progress-normal-question').textContent = `${progressData.modes['normal-question'].completedThemes.length}/4`;
+      document.getElementById('progress-challenge-full').textContent = `${progressData.modes['challenge-full'].completedThemes.length}/4`;
+      document.getElementById('progress-challenge-question').textContent = `${progressData.modes['challenge-question'].completedThemes.length}/4`;
+
+      updateRingProgress();
+    }
+
+    function toggleProgressPopup(force) {
+      const popup = document.getElementById('progress-popup');
+      if (typeof force === 'boolean') {
+        popup.style.display = force ? 'block' : 'none';
+        return;
+      }
+      popup.style.display = popup.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function syncCurrentProgress() {
+      const modeKey = getCurrentModeKey();
+      progressData.totalScore = totalScore;
+      progressData.currentMode = modeKey;
+      progressData.currentTheme = selectedTheme;
+      progressData.modes[modeKey].score = totalScore;
+      saveProgress();
+      updateAllProgressPanels();
+    }
+
+    function resetAllProgress() {
+      clearTimeout(autoNextTimer);
+      progressData = createEmptyProgressData();
+      saveProgress();
+      totalScore = 0;
+      scoreStreak = 0;
+      currentSpeechText = '';
+      updateAllProgressPanels();
+      toggleProgressPopup(false);
+      goHome();
+    }
+
+    function shuffleArray(arr) {
+      const clone = [...arr];
+      for (let i = clone.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [clone[i], clone[j]] = [clone[j], clone[i]];
+      }
+      return clone;
+    }
+
+    function buildThemeSequence(startKey, modeKey) {
+      const completed = progressData.modes[modeKey].completedThemes;
+      const pending = THEME_ORDER.filter(t => !completed.includes(t));
+      if (pending.length === 0) return [];
+
+      const startIndex = pending.indexOf(startKey);
+      if (startIndex < 0) return pending;
+
+      return [...pending.slice(startIndex), ...pending.slice(0, startIndex)];
+    }
+
+    function getNextUnfinishedModeKey() {
+      return MODE_ORDER.find(modeKey => progressData.modes[modeKey].completedThemes.length < 4) || null;
+    }
+
+    function parseModeKey(modeKey) {
+      const [difficulty, mode] = modeKey.split('-');
+      return { difficulty, mode };
+    }
+
+    function switchToMode(modeKey) {
+      const parsed = parseModeKey(modeKey);
+      difficultyMode = parsed.difficulty;
+      playMode = parsed.mode;
+
+      const pendingThemes = THEME_ORDER.filter(t => !progressData.modes[modeKey].completedThemes.includes(t));
+      if (pendingThemes.length === 0) {
+        const nextMode = getNextUnfinishedModeKey();
+        if (nextMode && nextMode !== modeKey) {
+          switchToMode(nextMode);
+        } else {
+          showAllModesComplete();
+        }
+        return;
+      }
+
+      selectedTheme = pendingThemes[0];
+      lastStartTheme = selectedTheme;
+      lastDifficulty = difficultyMode;
+      lastPlayMode = playMode;
+
+      themeSequence = buildThemeSequence(selectedTheme, modeKey);
+      currentThemeIndex = 0;
+      selectedTheme = themeSequence[currentThemeIndex];
+      startGame();
+    }
+
+    function goThemeSelect(mode, difficulty) {
+      clearTimeout(autoNextTimer);
+      playMode = mode;
+      difficultyMode = difficulty;
+      document.getElementById('home-screen').style.display = 'none';
+      document.getElementById('theme-screen').style.display = 'flex';
+      updateThemeScreenButtons();
+      updateAllProgressPanels();
+    }
+
+    
+    
+    function updateThemeScreenButtons() {
+      const modeKey = getCurrentModeKey();
+      if (!modeKey) return;
+
+      const completed = progressData.modes[modeKey].completedThemes || [];
+
+      const themeBtns = {
+        'fruits': document.querySelector('#theme-screen .mode-theme1'),
+        'animals': document.querySelector('#theme-screen .mode-theme2'),
+        'stationery': document.querySelector('#theme-screen .mode-theme3'),
+        'transport': document.querySelector('#theme-screen .mode-theme4')
+      };
+
+      // 定義原始文字對應
+      const defaultText = {
+        'fruits': '🍎 水果',
+        'animals': '🐶 動物',
+        'stationery': '✏️ 文具',
+        'transport': '🚌 交通工具'
+      };
+
+      for (const [key, btn] of Object.entries(themeBtns)) {
+        if (!btn) continue;
+        if (completed.includes(key)) {
+          btn.innerHTML = `${defaultText[key]} <span style="font-size:14px; background:rgba(0,0,0,0.2); padding:4px 8px; border-radius:10px; margin-left:8px; vertical-align:middle;">✅ 已完成</span>`;
+          // 可選：加上透明度讓它看起來已過關
+          // btn.style.opacity = '0.8';
+        } else {
+          btn.innerHTML = defaultText[key];
+          // btn.style.opacity = '1';
+        }
+      }
+    }
+
+    function backToThemeSelect() {
+      clearTimeout(autoNextTimer);
+      resetAllScreens();
+      document.getElementById('game-container').style.display = 'none';
+      document.getElementById('home-screen').style.display = 'none';
+
+      // 確保將進度標示更新在按鈕上
+      updateThemeScreenButtons();
+
+      document.getElementById('theme-screen').style.display = 'flex';
+      updateAllProgressPanels();
+    }
+
+    function backToHome() {
+      clearTimeout(autoNextTimer);
+      document.getElementById('theme-screen').style.display = 'none';
+      document.getElementById('home-screen').style.display = 'flex';
+      updateAllProgressPanels();
+    }
+
+    function goHome() {
+      clearTimeout(autoNextTimer);
+      fruitsData = [];
+      selectedItem = null;
+      questions = [];
+      scoreStreak = 0;
+      currentSpeechText = '';
+      currentQ = 0;
+      themeSequence = [];
+      currentThemeIndex = 0;
+      selectedTheme = '';
+      document.getElementById('game-container').style.display = 'none';
+      document.getElementById('theme-screen').style.display = 'none';
+      document.getElementById('home-screen').style.display = 'flex';
+      resetAllScreens();
+      updateAllProgressPanels();
+    }
+
+    function selectTheme(themeKey) {
+      clearTimeout(autoNextTimer);
+
+      lastStartTheme = themeKey;
+      lastDifficulty = difficultyMode;
+      lastPlayMode = playMode;
+
+      const modeKey = getCurrentModeKey();
+      themeSequence = buildThemeSequence(themeKey, modeKey);
+
+      if (themeSequence.length === 0) {
+        const nextMode = getNextUnfinishedModeKey();
+        if (nextMode && nextMode !== modeKey) {
+          switchToMode(nextMode);
+        } else {
+          showAllModesComplete();
+        }
+        return;
+      }
+
+      currentThemeIndex = 0;
+      selectedTheme = themeSequence[currentThemeIndex];
+      totalScore = progressData.totalScore;
+      startGame();
+    }
+
+    function restartCurrentMode() {
+      clearTimeout(autoNextTimer);
+
+      difficultyMode = lastDifficulty;
+      playMode = lastPlayMode;
+
+      const modeKey = getCurrentModeKey();
+      // 移除這行，保留已完成的主題進度
+      // progressData.modes[modeKey].completedThemes = [];
+      // 移除 saveProgress，因為進度沒有改變
+      // saveProgress();
+
+      // 只重新開始目前正在遊玩的主題（或者重頭播放 themeSequence 但不清除完成記錄）
+      // 使用者點擊「重新開始本模式」可能只是想重玩當前主題，或者從這個模式的第一個主題再玩一次
+      // 為了不干擾已記錄的進度，我們直接根據目前的 theme 重新 startGame 即可
+      // 或是重置 currentThemeIndex = 0，但不刪除進度
+
+      themeSequence = buildThemeSequence(lastStartTheme || 'fruits', modeKey);
+      currentThemeIndex = 0;
+      selectedTheme = themeSequence[0] || 'fruits';
+
+      totalScore = progressData.totalScore;
+      startGame();
+    }
+
+    function resetAllScreens() {
+      document.getElementById('level-1').classList.remove('active');
+      document.getElementById('level-23').classList.remove('active');
+      document.getElementById('btn-next-1').style.display = 'none';
+      document.getElementById('btn-next-2').style.display = 'none';
+
+      document.getElementById('messy-area').innerHTML = '';
+      document.getElementById('basket-area').innerHTML = '';
+      document.getElementById('supply-area').innerHTML = '';
+      document.getElementById('supply-area').style.display = 'flex';
+
+      document.getElementById('chart-graph-area').innerHTML = `
+        <div class="y-axis">
+          <div class="y-label">10</div>
+          <div class="y-label">9</div>
+          <div class="y-label">8</div>
+          <div class="y-label">7</div>
+          <div class="y-label">6</div>
+          <div class="y-label">5</div>
+          <div class="y-label">4</div>
+          <div class="y-label">3</div>
+          <div class="y-label">2</div>
+          <div class="y-label">1</div>
+        </div>
+      `;
+      document.getElementById('chart-x-icons').innerHTML = `<div class="y-axis-spacer"></div>`;
+
+      document.getElementById('question-container').style.display = 'none';
+      const readBtn = document.getElementById('btn-read-question');
+      if (readBtn) readBtn.style.display = 'none';
+      document.getElementById('question-container').innerHTML = `
+        <div class="question-card" id="q-text">問題加載中...</div>
+        
+        <div class="options-area" id="q-options"></div>
+        <div class="result-msg" id="q-msg"></div>
+      `;
+    }
+
+    function startGame() {
+      const theme = THEMES[selectedTheme];
+      if (!theme) return;
+
+      clearTimeout(autoNextTimer);
+      resetAllScreens();
+
+      document.getElementById('home-screen').style.display = 'none';
+      document.getElementById('theme-screen').style.display = 'none';
+      document.getElementById('game-container').style.display = 'block';
+
+      totalScore = progressData.totalScore;
+      currentQ = 0;
+      questions = [];
+      selectedItem = null;
+
+      document.getElementById('game-title').textContent = theme.title;
+      document.getElementById('chart-title').textContent = getChartTitle(selectedTheme);
+
+      fruitsData = createThemeData(theme.items, difficultyMode);
+      buildDynamicTargets();
+      updateTextsByMode(theme);
+      generateDynamicQuestions();
+      syncCurrentProgress();
+
+      if (playMode === 'question') {
+        document.getElementById('level-23').classList.add('active');
+        prepareQuestionChartOnly();
+        goToLevel3();
+      } else {
+        document.getElementById('level-1').classList.add('active');
+        initLevel1();
+      }
+    }
+
+    function updateTextsByMode(theme) {
+      document.getElementById('level1-title').textContent = '任務一：收集與分類 🧺';
+      document.getElementById('level1-instruction').innerHTML = `點擊或拖曳${theme.taskLabel}到正確的位置。分類正確可得 <strong>5分</strong>，連續加分更高`;
+
+      if (playMode === 'question') {
+        document.getElementById('level-title').textContent = '任務三：看象形圖答問題 🧠';
+        document.getElementById('level-instruction').innerHTML = `請根據隨機生成的${theme.taskLabel}象形圖回答問題，每題答對可得 <strong>20分</strong>，連續答對再加分`;
+      } else {
+        document.getElementById('level-title').textContent = '任務二：建立象形圖 📊';
+        document.getElementById('level-instruction').innerHTML = `將${theme.taskLabel}由下至上疊加在圖表中。放對位置得 <strong>5分</strong>，連擊有額外加分`;
+      }
+    }
+
+    function generateRandomCount(mode) {
+      if (mode === 'challenge') return Math.floor(Math.random() * 6) + 3;
+      return Math.floor(Math.random() * 5) + 1;
+    }
+
+    function hasUniqueMaxMinData(data) {
+      const counts = data.map(item => item.count);
+      const max = Math.max(...counts);
+      const min = Math.min(...counts);
+      return counts.filter(n => n === max).length === 1 &&
+             counts.filter(n => n === min).length === 1;
+    }
+
+    function createThemeData(items, mode) {
+      for (let attempt = 0; attempt < 300; attempt++) {
+        const candidate = items.map(item => ({
+          ...item,
+          count: generateRandomCount(mode)
+        }));
+        if (hasUniqueMaxMinData(candidate)) return candidate;
+      }
+
+      const fallbackCounts = mode === 'challenge' ? [3, 4, 5, 6, 7] : [1, 2, 3, 4, 5];
+      const shuffledItems = shuffleArray(items);
+
+      return shuffledItems.map((item, index) => ({
+        ...item,
+        count: fallbackCounts[index]
+      }));
+    }
+
+    function buildDynamicTargets() {
+      const basketArea = document.getElementById('basket-area');
+      basketArea.innerHTML = '';
+
+      fruitsData.forEach(item => {
+        const basket = document.createElement('div');
+        basket.className = 'basket';
+        basket.dataset.type = item.type;
+        basket.innerHTML = `
+          <div class="basket-title">${item.emoji} ${item.name}</div>
+          <div class="basket-dropzone"></div>
+        `;
+        basketArea.appendChild(basket);
+      });
+
+      buildChartColumns();
+    }
+
+    function buildChartColumns() {
+      const graphArea = document.getElementById('chart-graph-area');
+      const xIcons = document.getElementById('chart-x-icons');
+
+      graphArea.querySelectorAll('.chart-column').forEach(el => el.remove());
+      xIcons.innerHTML = `<div class="y-axis-spacer"></div>`;
+
+      fruitsData.forEach(item => {
+        const col = document.createElement('div');
+        col.className = 'chart-column';
+        col.dataset.type = item.type;
+        graphArea.appendChild(col);
+
+        const icon = document.createElement('div');
+        icon.className = 'chart-icon-wrapper';
+        icon.innerHTML = `${item.emoji}<div class="chart-icon-label">${item.name}</div>`;
+        xIcons.appendChild(icon);
+      });
+    }
+
+    function ensureAudioContext() {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextClass) return null;
+      if (!audioCtx) audioCtx = new AudioContextClass();
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume().catch(() => {});
+      }
+      return audioCtx;
+    }
+
+    function playRewardSound(level = 1) {
+      const ctx = ensureAudioContext();
+      if (!ctx) return;
+      const now = ctx.currentTime;
+      const gain = ctx.createGain();
+      gain.connect(ctx.destination);
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.16, now + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.38);
+
+      const notes = level >= 3 ? [659.25, 783.99, 987.77] : level === 2 ? [587.33, 698.46, 783.99] : [523.25, 659.25, 783.99];
+      notes.forEach((freq, index) => {
+        const osc = ctx.createOscillator();
+        osc.type = index === 0 ? 'triangle' : 'sine';
+        osc.frequency.setValueAtTime(freq, now + index * 0.05);
+        osc.connect(gain);
+        osc.start(now + index * 0.05);
+        osc.stop(now + 0.14 + index * 0.05);
+      });
+    }
+
+    function showScoreBurst(textValue) {
+      const burst = document.getElementById('score-burst');
+      if (!burst) return;
+      burst.textContent = textValue;
+      burst.classList.add('show');
+      clearTimeout(showScoreBurst.timer);
+      showScoreBurst.timer = setTimeout(() => burst.classList.remove('show'), 700);
+    }
+
+    function normalizeSpeechText(textValue) {
+      return String(textValue || '')
+        .replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, '')
+        .replace(/\s+/g, ' ')
+        .replace(/(\d+)\./g, '$1題：')
+        .replace(/\s*、\s*/g, '、')
+        .trim();
+    }
+
+    function pickCantoneseVoice() {
+      if (!('speechSynthesis' in window)) return null;
+      const voices = window.speechSynthesis.getVoices() || [];
+      return voices.find(v => /yue|zh-HK|Hong Kong/i.test(`${v.lang} ${v.name}`))
+        || voices.find(v => /zh-HK/i.test(v.lang))
+        || voices.find(v => /zh-TW/i.test(v.lang))
+        || voices.find(v => /^zh/i.test(v.lang))
+        || null;
+    }
+
+    function speakCurrentQuestion() {
+      if (!currentSpeechText || !('speechSynthesis' in window)) return;
+      try {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(normalizeSpeechText(currentSpeechText));
+        const voice = pickCantoneseVoice();
+        if (voice) utterance.voice = voice;
+        utterance.lang = voice ? voice.lang : 'zh-HK';
+        utterance.rate = 0.9;
+        utterance.pitch = 1;
+        utterance.volume = 1;
+        window.speechSynthesis.speak(utterance);
+      } catch (e) {}
+    }
+
+    function initAudioUnlock() {
+      const unlock = () => {
+        ensureAudioContext();
+        if ('speechSynthesis' in window) window.speechSynthesis.getVoices();
+        document.removeEventListener('touchstart', unlock, true);
+        document.removeEventListener('pointerdown', unlock, true);
+        document.removeEventListener('click', unlock, true);
+      };
+      document.addEventListener('touchstart', unlock, true);
+      document.addEventListener('pointerdown', unlock, true);
+      document.addEventListener('click', unlock, true);
+    }
+
+    function addScore(points, label = '') {
+      scoreStreak += 1;
+      const comboBonus = Math.min((scoreStreak - 1) * 2, 10);
+      const actualPoints = points + comboBonus;
+      totalScore += actualPoints;
+      progressData.totalScore = totalScore;
+      progressData.modes[getCurrentModeKey()].score = totalScore;
+      saveProgress();
+      updateAllProgressPanels();
+      playRewardSound(scoreStreak >= 4 ? 3 : scoreStreak >= 2 ? 2 : 1);
+      showScoreBurst(`+${actualPoints}${label ? ' ' + label : ''}`);
+      return actualPoints;
+    }
+
+    function deductScore(points) {
+      scoreStreak = 0;
+      totalScore = Math.max(0, totalScore - points);
+      progressData.totalScore = totalScore;
+      progressData.modes[getCurrentModeKey()].score = totalScore;
+      saveProgress();
+      updateAllProgressPanels();
+    }
+
+    function initLevel1() {
+      const messyArea = document.getElementById('messy-area');
+      let allItems = [];
+
+      fruitsData.forEach(d => {
+        for (let i = 0; i < d.count; i++) {
+          allItems.push({ type: d.type, emoji: d.emoji });
+        }
+      });
+
+      allItems = shuffleArray(allItems);
+
+      allItems.forEach(item => {
+        const el = document.createElement('div');
+        el.className = 'fruit-item';
+        el.textContent = item.emoji;
+        el.dataset.type = item.type;
+        el.draggable = true;
+
+        el.addEventListener('dragstart', e => {
+          e.dataTransfer.setData('text/plain', item.type);
+          selectedItem = el;
+          setTimeout(() => el.style.opacity = 0.5, 0);
+        });
+
+        el.addEventListener('dragend', () => {
+          el.style.opacity = 1;
+          clearSelection();
+        });
+
+        el.addEventListener('click', () => {
+          if (selectedItem === el) {
+            clearSelection();
+          } else {
+            clearSelection();
+            selectedItem = el;
+            el.classList.add('selected');
+          }
+        });
+
+        addTouchDrag(el, (fruitEl, target) => {
+          if (fruitEl.dataset.type === target.dataset.type) {
+            moveToBasket(fruitEl, target);
+          } else {
+            showError(target);
+          }
+        });
+
+        messyArea.appendChild(el);
+      });
+
+      bindBasketEvents();
+    }
+
+    function bindBasketEvents() {
+      document.querySelectorAll('.basket').forEach(basket => {
+        basket.addEventListener('dragover', e => e.preventDefault());
+
+        basket.addEventListener('drop', e => {
+          e.preventDefault();
+          if (selectedItem && selectedItem.dataset.type === basket.dataset.type) {
+            moveToBasket(selectedItem, basket);
+          } else if (selectedItem) {
+            showError(basket);
+          }
+        });
+
+        basket.addEventListener('click', () => {
+          if (!selectedItem) return;
+          if (selectedItem.dataset.type === basket.dataset.type) {
+            moveToBasket(selectedItem, basket);
+          } else {
+            showError(basket);
+          }
+        });
+      });
+    }
+
+    function moveToBasket(fruitEl, basketEl) {
+      fruitEl.draggable = false;
+      clearSelection();
+      basketEl.querySelector('.basket-dropzone').appendChild(fruitEl);
+      addScore(5);
+
+      if (document.getElementById('messy-area').children.length === 0) {
+        document.getElementById('btn-next-1').style.display = 'inline-block';
+      }
+    }
+
+    function goToLevel2() {
+      document.getElementById('level-1').classList.remove('active');
+      document.getElementById('level-23').classList.add('active');
+
+      const supplyArea = document.getElementById('supply-area');
+      supplyArea.style.display = 'flex';
+      supplyArea.innerHTML = '';
+
+      document.querySelectorAll('.basket-dropzone .fruit-item').forEach(item => {
+        const clone = item.cloneNode(true);
+        clone.draggable = true;
+
+        clone.addEventListener('dragstart', e => {
+          e.dataTransfer.setData('text/plain', clone.dataset.type);
+          selectedItem = clone;
+          setTimeout(() => clone.style.opacity = 0.5, 0);
+        });
+
+        clone.addEventListener('dragend', () => {
+          clone.style.opacity = 1;
+          clearSelection();
+        });
+
+        clone.addEventListener('click', () => {
+          if (selectedItem === clone) {
+            clearSelection();
+          } else {
+            clearSelection();
+            selectedItem = clone;
+            clone.classList.add('selected');
+          }
+        });
+
+        addTouchDrag(clone, (fruitEl, target) => {
+          if (fruitEl.dataset.type === target.dataset.type) {
+            moveToChart(fruitEl, target);
+          } else {
+            showError(target);
+          }
+        });
+
+        supplyArea.appendChild(clone);
+      });
+
+      bindChartEvents();
+    }
+
+    function bindChartEvents() {
+      document.querySelectorAll('.chart-column').forEach(col => {
+        col.addEventListener('dragover', e => e.preventDefault());
+
+        col.addEventListener('drop', e => {
+          e.preventDefault();
+          if (selectedItem && selectedItem.dataset.type === col.dataset.type) {
+            moveToChart(selectedItem, col);
+          } else if (selectedItem) {
+            showError(col);
+          }
+        });
+
+        col.addEventListener('click', () => {
+          if (!selectedItem) return;
+          if (selectedItem.dataset.type === col.dataset.type) {
+            moveToChart(selectedItem, col);
+          } else {
+            showError(col);
+          }
+        });
+      });
+    }
+
+    function moveToChart(fruitEl, colEl) {
+      fruitEl.remove();
+      clearSelection();
+
+      const slot = document.createElement('div');
+      slot.className = 'chart-slot';
+      slot.textContent = fruitEl.textContent;
+      colEl.appendChild(slot);
+      addScore(5);
+
+      if (document.getElementById('supply-area').children.length === 0) {
+        document.getElementById('btn-next-2').style.display = 'inline-block';
+      }
+    }
+
+    function showError(el) {
+      el.style.backgroundColor = '#ff7675';
+      setTimeout(() => {
+        el.style.backgroundColor = el.classList.contains('chart-column') ? '#fdfbfb' : '#dfe6e9';
+      }, 300);
+    }
+
+    function clearSelection() {
+      if (selectedItem) selectedItem.classList.remove('selected');
+      selectedItem = null;
+    }
+
+    function prepareQuestionChartOnly() {
+      document.getElementById('supply-area').style.display = 'none';
+      document.getElementById('btn-next-2').style.display = 'none';
+      document.getElementById('chart-title').textContent = getChartTitle(selectedTheme);
+
+      document.querySelectorAll('.chart-column').forEach(col => col.innerHTML = '');
+
+      fruitsData.forEach(item => {
+        const col = document.querySelector(`.chart-column[data-type="${item.type}"]`);
+        for (let i = 0; i < item.count; i++) {
+          const slot = document.createElement('div');
+          slot.className = 'chart-slot';
+          slot.textContent = item.emoji;
+          col.appendChild(slot);
+        }
+      });
+    }
+
+    function pairLabel(a, b) {
+      const labels = [`${a.emoji} ${a.name}`, `${b.emoji} ${b.name}`].sort();
+      return `${labels[0]} 和 ${labels[1]}`;
+    }
+
+    function buildUniqueNumberOptions(correct, min = 0) {
+      const answer = Number(correct);
+      const candidates = [answer];
+
+      for (let step = 1; step <= 20 && candidates.length < 6; step++) {
+        const plus = answer + step;
+        const minus = answer - step;
+        if (!candidates.includes(plus)) candidates.push(plus);
+        if (minus >= min && !candidates.includes(minus)) candidates.push(minus);
+      }
+
+      return candidates.slice(0, 3).map(String);
+    }
+
+    function makeNumberQuestion(qText, correctNumber, min = 0, targetTypes = []) {
+      const correctText = String(correctNumber);
+      const pool = buildUniqueNumberOptions(correctNumber, min);
+      if (!pool.includes(correctText)) pool[0] = correctText;
+      const options = shuffleArray(pool.slice(0, 3));
+      return { q: qText, options, ans: options.indexOf(correctText), targetTypes };
+    }
+
+    function makeTextQuestion(qText, correctText, distractors, targetTypes = []) {
+      const uniqueDistractors = [];
+      distractors.forEach(item => {
+        const text = String(item);
+        if (text && text !== correctText && !uniqueDistractors.includes(text)) {
+          uniqueDistractors.push(text);
+        }
+      });
+
+      if (uniqueDistractors.length < 2) return null;
+
+      const options = shuffleArray([correctText, ...shuffleArray(uniqueDistractors).slice(0, 2)]);
+      return { q: qText, options, ans: options.indexOf(correctText), targetTypes };
+    }
+
+    function getDifferentCountPairs(data) {
+      const pairs = [];
+      for (let i = 0; i < data.length; i++) {
+        for (let j = i + 1; j < data.length; j++) {
+          if (data[i].count !== data[j].count) pairs.push([data[i], data[j]]);
+        }
+      }
+      return pairs;
+    }
+
+    function getEqualCountPairs(data) {
+      const pairs = [];
+      for (let i = 0; i < data.length; i++) {
+        for (let j = i + 1; j < data.length; j++) {
+          if (data[i].count === data[j].count) pairs.push([data[i], data[j]]);
+        }
+      }
+      return pairs;
+    }
+
+    function getDistractorPairLabels(data, forbiddenLabels = []) {
+      const labels = [];
+      getDifferentCountPairs(data).forEach(([a, b]) => {
+        const label = pairLabel(a, b);
+        if (!labels.includes(label) && !forbiddenLabels.includes(label)) labels.push(label);
+      });
+      return shuffleArray(labels);
+    }
+
+    function sanitizeQuestions(list, expectedCount) {
+      const clean = list.filter(q => {
+        if (!q || !Array.isArray(q.options)) return false;
+        if (q.options.length !== 3) return false;
+        if (q.ans < 0 || q.ans >= q.options.length) return false;
+        return new Set(q.options).size === q.options.length;
+      });
+      return clean.length === expectedCount ? clean : null;
+    }
+
+    function buildFallbackQuestions(sorted) {
+      const fallback = [];
+      fallback.push(makeNumberQuestion(`1. ${sorted[0].name} 有多少個？`, sorted[0].count, 0, [sorted[0].type]));
+      fallback.push(makeNumberQuestion(`2. ${sorted[4].name} 有多少個？`, sorted[4].count, 0, [sorted[4].type]));
+      fallback.push(makeNumberQuestion(`3. ${sorted[0].name} 和 ${sorted[1].name} 一共有多少個？`, sorted[0].count + sorted[1].count, 0, [sorted[0].type, sorted[1].type]));
+      fallback.push(makeNumberQuestion(`4. ${sorted[2].name} 的數量加 1 是多少？`, sorted[2].count + 1, 0, [sorted[2].type]));
+      fallback.push(makeNumberQuestion(`5. ${sorted[0].name} 比 ${sorted[4].name} 多多少個？`, sorted[0].count - sorted[4].count, 0, [sorted[0].type, sorted[4].type]));
+      fallback.push(makeNumberQuestion(`6. 圖表中共有多少個圖形？`, sorted.reduce((sum, item) => sum + item.count, 0), 0));
+
+      if (difficultyMode === 'challenge') {
+        fallback.push(makeNumberQuestion(`7. ${sorted[3].name} 和 ${sorted[4].name} 一共有多少個？`, sorted[3].count + sorted[4].count, 0, [sorted[3].type, sorted[4].type]));
+        fallback.push(makeNumberQuestion(`8. ${sorted[1].name} 的數量加 2 是多少？`, sorted[1].count + 2, 0, [sorted[1].type]));
+        fallback.push(makeNumberQuestion(`9. ${sorted[2].emoji} ${sorted[2].name} 有多少個？`, sorted[2].count, 0, [sorted[2].type]));
+      }
+      return fallback;
+    }
+
+    function generateDynamicQuestions() {
+      const expectedCount = difficultyMode === 'challenge' ? 9 : 6;
+
+      for (let attempt = 0; attempt < 50; attempt++) {
+        const sorted = [...fruitsData].sort((a, b) => b.count - a.count);
+        const most = sorted[0];
+        const least = sorted[sorted.length - 1];
+        const allLabels = sorted.map(item => `${item.emoji} ${item.name}`);
+        const differentPairs = shuffleArray(getDifferentCountPairs(sorted));
+        const safeDifferentPair = differentPairs[0];
+        const questionList = [];
+
+        const q1 = makeTextQuestion('1. 哪一種數量最多？', `${most.emoji} ${most.name}`, allLabels.filter(label => label !== `${most.emoji} ${most.name}`), [most.type]);
+        if (q1) questionList.push(q1);
+
+        questionList.push(makeNumberQuestion(`2. ${most.name} 有多少個？`, most.count, 0, [most.type]));
+
+        const q3 = makeTextQuestion('3. 哪一種數量最少？', `${least.emoji} ${least.name}`, allLabels.filter(label => label !== `${least.emoji} ${least.name}`), [least.type]);
+        if (q3) questionList.push(q3);
+
+        questionList.push(makeNumberQuestion(`4. ${least.name} 有多少個？`, least.count, 0, [least.type]));
+
+        if (safeDifferentPair) {
+          const [item1, item2] = safeDifferentPair;
+          const higher = item1.count > item2.count ? item1 : item2;
+          const lower = higher === item1 ? item2 : item1;
+
+          const q5 = makeTextQuestion(
+            `5. ${item1.emoji} ${item1.name} 和 ${item2.emoji} ${item2.name}，哪一種較多？`,
+            `${higher.emoji} ${higher.name}`,
+            [`${lower.emoji} ${lower.name}`, '一樣多']
+          );
+          if (q5) questionList.push(q5);
+
+          questionList.push(makeNumberQuestion(`6. ${item1.emoji} ${item1.name} 和 ${item2.emoji} ${item2.name} 相差多少個？`, Math.abs(item1.count - item2.count), 0, [item1.type, item2.type]));
+        }
+
+        if (difficultyMode === 'challenge') {
+          const equalPairs = shuffleArray(getEqualCountPairs(sorted));
+          const equalPair = equalPairs[0] || null;
+
+          if (equalPair) {
+            const correctPairLabel = pairLabel(equalPair[0], equalPair[1]);
+            const distractorPairLabels = getDistractorPairLabels(sorted, [correctPairLabel]);
+
+            if (distractorPairLabels.length >= 2) {
+              const q7 = makeTextQuestion('7. 哪兩種數量一樣多？', correctPairLabel, distractorPairLabels, [equalPair[0].type, equalPair[1].type]);
+              if (q7) questionList.push(q7);
+              questionList.push(makeNumberQuestion(`8. ${equalPair[0].name}和${equalPair[1].name}各有多少個？`, equalPair[0].count, 0, [equalPair[0].type, equalPair[1].type]));
+            } else {
+              questionList.push(makeNumberQuestion(`7. ${sorted[3].name} 和 ${sorted[4].name} 一共有多少個？`, sorted[3].count + sorted[4].count, 0));
+              questionList.push(makeNumberQuestion(`8. ${sorted[2].name} 的數量加 2 是多少？`, sorted[2].count + 2, 0));
+            }
+          } else {
+            questionList.push(makeNumberQuestion(`7. ${sorted[3].name} 和 ${sorted[4].name} 一共有多少個？`, sorted[3].count + sorted[4].count, 0));
+            questionList.push(makeNumberQuestion(`8. ${sorted[2].name} 的數量加 2 是多少？`, sorted[2].count + 2, 0));
+          }
+
+          questionList.push(makeNumberQuestion(`9. ${sorted[2].emoji} ${sorted[2].name} 有多少個？`, sorted[2].count, 0));
+        }
+
+        const cleaned = sanitizeQuestions(questionList, expectedCount);
+        if (cleaned) {
+          questions = cleaned;
+          return;
+        }
+
+        fruitsData = createThemeData(THEMES[selectedTheme].items, difficultyMode);
+        buildDynamicTargets();
+      }
+
+      const fallbackSorted = [...fruitsData].sort((a, b) => b.count - a.count);
+      questions = sanitizeQuestions(buildFallbackQuestions(fallbackSorted), expectedCount) || buildFallbackQuestions(fallbackSorted);
+    }
+
+    function goToLevel3() {
+      document.getElementById('btn-next-2').style.display = 'none';
+      document.getElementById('question-container').style.display = 'block';
+      const readBtn = document.getElementById('btn-read-question');
+      if (readBtn) readBtn.style.display = 'block';
+  document.getElementById('hint-area').style.display = 'block';
+      document.getElementById('chart-title').textContent = getChartTitle(selectedTheme);
+
+      if (!questions || questions.length === 0) generateDynamicQuestions();
+
+      currentQ = 0;
+      scoreStreak = 0;
+      showQuestion();
+    }
+
+    
+    function clearVisualHints() {
+      document.querySelectorAll('.hint-highlight').forEach(el => el.classList.remove('hint-highlight'));
+      document.querySelectorAll('.hint-highlight-y').forEach(el => el.classList.remove('hint-highlight-y'));
+      document.querySelectorAll('.hint-line').forEach(el => el.remove());
+    }
+
+    function showVisualHint() {
+      clearVisualHints();
+      if (!currentSpeechText || !fruitsData || !questions) return;
+
+      const qData = questions[currentQ];
+      if (!qData) return;
+
+      // 如果題目有定義目標項目，就只標示這些項目
+      let targetTypes = qData.targetTypes || [];
+
+      // 處理沒有明確定義 targetTypes 的情況 (例如 fallback 題或總數題)
+      if (targetTypes.length === 0) {
+        // 如果是問「共有多少個」，不標示單一項目以免混亂，或者標示全部
+        if (currentSpeechText.includes('共有多少個圖形')) {
+           targetTypes = fruitsData.map(item => item.type);
+        } else {
+           // 嘗試用文字匹配作為備用方案
+           targetTypes = fruitsData.filter(item => 
+             currentSpeechText.includes(item.name) || currentSpeechText.includes(item.emoji)
+           ).map(item => item.type);
+        }
+      }
+
+      if (targetTypes.length === 0) return;
+
+      const graphArea = document.getElementById('chart-graph-area');
+      const yAxisLabels = document.querySelectorAll('.y-label');
+
+      targetTypes.forEach(type => {
+        const item = fruitsData.find(d => d.type === type);
+        if (!item) return;
+
+        const col = document.querySelector(`.chart-column[data-type="${item.type}"]`);
+        if (col) {
+          col.classList.add('hint-highlight');
+
+          const count = item.count;
+          if (count > 0) {
+            const line = document.createElement('div');
+            line.className = 'hint-line';
+            line.style.bottom = (count * 45 - 22.5) + 'px'; 
+            graphArea.style.position = 'relative'; 
+            graphArea.appendChild(line);
+
+            const yIndex = 10 - count;
+            if (yAxisLabels[yIndex]) {
+              yAxisLabels[yIndex].classList.add('hint-highlight-y');
+            }
+          }
+        }
+      });
+    }
+    function showQuestion() {
+      if (currentQ >= questions.length) {
+        handleThemeComplete();
+        return;
+      }
+
+      const qData = questions[currentQ];
+      currentSpeechText = qData.q;
+      
+      
+      // 動態生成算式提示
+      let formulaText = '';
+      if (qData.q.includes('相差') || qData.q.includes('多多少') || qData.q.includes('少多少')) {
+        if (qData.targetTypes && qData.targetTypes.length === 2) {
+          const c1 = fruitsData.find(d => d.type === qData.targetTypes[0])?.count || 0;
+          const c2 = fruitsData.find(d => d.type === qData.targetTypes[1])?.count || 0;
+          const max = Math.max(c1, c2);
+          const min = Math.min(c1, c2);
+          formulaText = `算式： ${max} - ${min} = ?`;
+        }
+      } else if (qData.q.includes('一共') || (qData.q.includes('共有') && qData.targetTypes && qData.targetTypes.length === 2)) {
+        if (qData.targetTypes && qData.targetTypes.length === 2) {
+           const c1 = fruitsData.find(d => d.type === qData.targetTypes[0])?.count || 0;
+           const c2 = fruitsData.find(d => d.type === qData.targetTypes[1])?.count || 0;
+           formulaText = `算式： ${c1} + ${c2} = ?`;
+        }
+      } else if (qData.q.includes('共有多少個圖形')) {
+         const counts = fruitsData.map(d => d.count);
+         formulaText = `算式： ${counts.join(' + ')} = ?`;
+      } else if (qData.q.includes('加') && qData.q.includes('是多少')) {
+         if (qData.targetTypes && qData.targetTypes.length === 1) {
+            const count = fruitsData.find(d => d.type === qData.targetTypes[0])?.count || 0;
+            const match = qData.q.match(/加 (\d+)/);
+            if (match) {
+              formulaText = `算式： ${count} + ${match[1]} = ?`;
+            }
+         }
+      } else if (qData.q.includes('各有多少個')) {
+         if (qData.targetTypes && qData.targetTypes.length === 2) {
+             const emoji1 = fruitsData.find(d => d.type === qData.targetTypes[0])?.emoji || '';
+             const emoji2 = fruitsData.find(d => d.type === qData.targetTypes[1])?.emoji || '';
+             formulaText = `提示： 看看 ${emoji1} 和 ${emoji2} 的高度`;
+         }
+      } else if (qData.q.includes('多少個') && !qData.q.includes('各有多少') && !qData.q.includes('共有')) {
+         if (qData.targetTypes && qData.targetTypes.length === 1) {
+             const emoji = fruitsData.find(d => d.type === qData.targetTypes[0])?.emoji || '';
+             formulaText = `提示： 數一數 ${emoji} 有幾個`;
+         }
+      }
+
+      let formulaHTML = '';
+      if (formulaText) {
+         formulaHTML = `
+           <div style="margin-top:15px; text-align:center;">
+             <button id="btn-show-formula" onclick="document.getElementById('formula-display').style.display='block'; this.style.display='none';" style="background:#fdcb6e; border:none; padding:6px 12px; border-radius:8px; cursor:pointer; font-weight:bold; font-size:16px; color:#2d3436;">
+               📝 顯示算式提示
+             </button>
+             <div id="formula-display" style="display:none; color:#d63031; font-size:20px; font-weight:bold; margin-top:8px; background:#ffeaa7; padding:8px; border-radius:10px; border:2px dashed #d63031;">
+               💡 ${formulaText}
+             </div>
+           </div>
+         `;
+      }
+
+      
+      // 關鍵字高亮處理
+      let displayQ = qData.q;
+      const keywords = ['最多', '最少', '相差多少個', '相差', '多多少個', '多多少', '少多少個', '少多少', '一共有多少個', '一共', '共有多少個', '共有', '各有多少個', '一樣多', '加 1', '加 2'];
+      keywords.forEach(kw => {
+        // 避免重複替換（例如替換完"相差多少個"又替換"相差"），可以根據長度排序，上面陣列已經長到短排列
+        if (displayQ.includes(kw) && !displayQ.includes(`>${kw}<`)) {
+           const regex = new RegExp(kw, 'g');
+           displayQ = displayQ.replace(regex, `<span class="keyword-highlight">${kw}</span>`);
+        }
+      });
+
+      document.getElementById('q-text').innerHTML = displayQ + formulaHTML;
+
+
+
+      clearVisualHints();
+      const readBtn = document.getElementById('btn-read-question');
+      if (readBtn) readBtn.disabled = false;
+
+      const optsContainer = document.getElementById('q-options');
+      optsContainer.innerHTML = '';
+
+      qData.options.forEach((opt, index) => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.textContent = opt;
+        btn.onclick = () => checkAnswer(index, qData.ans);
+        optsContainer.appendChild(btn);
+      });
+
+      document.getElementById('q-msg').textContent = '';
+    }
+
+    function playVictorySound() {
+      const ctx = ensureAudioContext();
+      if (!ctx) return;
+      const now = ctx.currentTime;
+      const gain = ctx.createGain();
+      gain.connect(ctx.destination);
+
+      // 設定音量包絡線，讓聲音整體延續 2.5 到 3 秒
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.linearRampToValueAtTime(0.15, now + 0.1);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 2.5);
+
+      // 較長且華麗的音符序列（大調琶音往上走，有升級過關的感覺）
+      const notes = [
+        {f: 523.25, t: 0},     // Do
+        {f: 659.25, t: 0.15},  // Mi
+        {f: 783.99, t: 0.3},   // Sol
+        {f: 1046.50, t: 0.45}, // Do(高)
+        {f: 783.99, t: 0.6},   // Sol
+        {f: 1046.50, t: 0.8},  // Do(高)
+        {f: 1318.51, t: 1.0},  // Mi(高)
+        {f: 1567.98, t: 1.2}   // Sol(高)
+      ];
+
+      notes.forEach((note) => {
+        const osc = ctx.createOscillator();
+        osc.type = 'triangle'; // 類似遊戲晶片的音色
+        osc.frequency.setValueAtTime(note.f, now + note.t);
+        osc.connect(gain);
+        osc.start(now + note.t);
+        osc.stop(now + note.t + 1.0); // 每個音符延音拉長
+      });
+    }
+
+    function checkAnswer(selected, correct) {
+      const msg = document.getElementById('q-msg');
+      const buttons = document.querySelectorAll('#q-options .option-btn');
+
+      if (selected === correct) {
+        buttons.forEach(b => b.disabled = true);
+        buttons[selected].style.background = '#00b894';
+        buttons[selected].style.color = 'white';
+        msg.style.color = '#00b894';
+
+        // addScore already calls playRewardSound, but we can make sure the user hears it.
+        const gained = addScore(20, scoreStreak >= 1 ? '連擊加分' : '答對');
+
+        // Add an extra celebratory sound specific to the modal (level 3 plays the highest notes)
+        playVictorySound();
+
+        msg.textContent = `✅ 答對了！+${gained}分`;
+
+        // 顯示 5 秒彈出視窗
+        const modal = document.getElementById('success-modal');
+        const backdrop = document.getElementById('success-backdrop');
+        const scoreMsg = document.getElementById('success-score-msg');
+        const timerDisplay = document.getElementById('success-timer');
+
+        scoreMsg.textContent = `獲得 ${gained} 分！`;
+        modal.style.display = 'block';
+        backdrop.style.display = 'block';
+
+        let timeLeft = 5;
+        timerDisplay.textContent = `${timeLeft} 秒後繼續...`;
+
+        const countdown = setInterval(() => {
+          timeLeft--;
+          if (timeLeft > 0) {
+            timerDisplay.textContent = `${timeLeft} 秒後繼續...`;
+          } else {
+            clearInterval(countdown);
+            modal.style.display = 'none';
+            backdrop.style.display = 'none';
+            currentQ++;
+            showQuestion();
+          }
+        }, 1000);
+      } else {
+        buttons[selected].style.background = '#ff7675';
+        buttons[selected].style.color = 'white';
+        msg.style.color = '#d63031';
+        msg.textContent = '❌ 再想一想！-5分';
+        deductScore(5);
+
+        // 答錯音效
+        const ctx = ensureAudioContext();
+        if (ctx) {
+          const now = ctx.currentTime;
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(200, now);
+          osc.frequency.exponentialRampToValueAtTime(100, now + 0.3);
+          gain.gain.setValueAtTime(0.1, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.3);
+        }
+
+        setTimeout(() => {
+          buttons.forEach(b => {
+            b.disabled = false;
+            b.style.background = '';
+            b.style.color = '';
+          });
+          msg.textContent = '';
+        }, 1000);
+      }
+    }
+
+    function handleThemeComplete() {
+      const modeKey = getCurrentModeKey();
+      const modeProgress = progressData.modes[modeKey];
+
+      if (!modeProgress.completedThemes.includes(selectedTheme)) {
+        modeProgress.completedThemes.push(selectedTheme);
+      }
+
+      progressData.currentMode = modeKey;
+      progressData.currentTheme = selectedTheme;
+      saveProgress();
+      updateAllProgressPanels();
+
+      const nextThemeInMode = themeSequence.find((theme, index) => index > currentThemeIndex && !modeProgress.completedThemes.includes(theme));
+      const modeFinished = modeProgress.completedThemes.length >= 4;
+
+      if (!modeFinished && nextThemeInMode) {
+        document.getElementById('question-container').style.display = 'block';
+  document.getElementById('hint-area').style.display = 'block';
+        document.getElementById('question-container').innerHTML = `
+          <h2 style="color:#00b894; font-size:28px;">
+            ✅ ${getThemeName(selectedTheme)}主題完成！
+            <br><br>
+            <span style="color:#d63031; font-size:36px;">累積分數：${totalScore}</span>
+          </h2>
+          <div class="completion-note">5 秒後自動切換到本模式未完成主題：${getThemeName(nextThemeInMode)}</div>
+          <button class="btn-next" style="display:inline-block;" onclick="goToNextThemeNow()">立即前往下一主題</button>
+        `;
+
+        clearTimeout(autoNextTimer);
+        autoNextTimer = setTimeout(goToNextThemeNow, 5000);
+        return;
+      }
+
+      const nextMode = getNextUnfinishedModeKey();
+
+      if (nextMode && nextMode !== modeKey) {
+        document.getElementById('question-container').style.display = 'block';
+  document.getElementById('hint-area').style.display = 'block';
+        document.getElementById('question-container').innerHTML = `
+          <h2 style="color:#6c5ce7; font-size:28px;">
+            🎉 ${getModeLabelByKey(modeKey)} 已完成！
+            <br><br>
+            <span style="color:#d63031; font-size:36px;">累積分數：${totalScore}</span>
+          </h2>
+          <div class="completion-note">5 秒後自動切換到玩家未完成模式：${getModeLabelByKey(nextMode)}</div>
+          <button class="btn-next" style="display:inline-block;" onclick="goToNextModeNow()">立即前往下一模式</button>
+        `;
+
+        clearTimeout(autoNextTimer);
+        autoNextTimer = setTimeout(goToNextModeNow, 5000);
+        return;
+      }
+
+      showAllModesComplete();
+    }
+
+    function goToNextThemeNow() {
+      clearTimeout(autoNextTimer);
+
+      const modeKey = getCurrentModeKey();
+      const completed = progressData.modes[modeKey].completedThemes;
+      const nextTheme = themeSequence.find((theme, index) => index > currentThemeIndex && !completed.includes(theme));
+
+      if (!nextTheme) {
+        goToNextModeNow();
+        return;
+      }
+
+      currentThemeIndex = themeSequence.indexOf(nextTheme);
+      selectedTheme = nextTheme;
+      startGame();
+    }
+
+    function goToNextModeNow() {
+      clearTimeout(autoNextTimer);
+      const nextMode = getNextUnfinishedModeKey();
+
+      if (!nextMode) {
+        showAllModesComplete();
+        return;
+      }
+
+      switchToMode(nextMode);
+    }
+
+    function showAllModesComplete() {
+      progressData.currentTheme = '';
+      saveProgress();
+      updateAllProgressPanels();
+
+      document.getElementById('question-container').style.display = 'block';
+  document.getElementById('hint-area').style.display = 'block';
+      document.getElementById('question-container').innerHTML = `
+        <h2 style="color:#00b894; font-size:28px;">
+          🏆 所有模式全部完成！
+          <br><br>
+          <span style="color:#d63031; font-size:36px;">總分：${progressData.totalScore}</span>
+        </h2>
+        <div class="completion-note">4 種模式與全部主題都已完成，右上角圓環會持續保留紀錄。</div>
+        <button class="btn-next" style="display:inline-block;" onclick="goHome()">返回首頁</button>
+      `;
+    }
+
+    function addTouchDrag(el, dropCallback) {
+      let ghost = null;
+
+      el.addEventListener('touchstart', function(e) {
+        e.preventDefault();
+        const touch = e.touches[0];
+        ghost = el.cloneNode(true);
+        ghost.style.cssText = `
+          position: fixed;
+          z-index: 9999;
+          opacity: 0.8;
+          pointer-events: none;
+          font-size: 42px;
+          left: ${touch.clientX - 22}px;
+          top: ${touch.clientY - 22}px;
+          transform: scale(1.2);
+          transition: none;
+        `;
+        document.body.appendChild(ghost);
+        selectedItem = el;
+        el.classList.add('selected');
+        el.style.opacity = 0.4;
+      }, { passive: false });
+
+      el.addEventListener('touchmove', function(e) {
+        e.preventDefault();
+        if (!ghost) return;
+        const touch = e.touches[0];
+        ghost.style.left = `${touch.clientX - 22}px`;
+        ghost.style.top = `${touch.clientY - 22}px`;
+      }, { passive: false });
+
+      el.addEventListener('touchend', function(e) {
+        e.preventDefault();
+
+        if (ghost) {
+          ghost.remove();
+          ghost = null;
+        }
+
+        el.style.opacity = 1;
+        const touch = e.changedTouches[0];
+        const hit = document.elementFromPoint(touch.clientX, touch.clientY);
+
+        if (hit && selectedItem) {
+          const dropTarget = hit.closest('.basket') || hit.closest('.chart-column');
+          if (dropTarget) {
+            dropCallback(el, dropTarget);
+            return;
+          }
+        }
+
+        clearSelection();
+      }, { passive: false });
+    }
+
+    document.addEventListener('click', function(e) {
+      const popup = document.getElementById('progress-popup');
+      const panel = document.querySelector('.top-fixed-panel');
+      if (!popup || !panel) return;
+
+      const clickedInsidePopup = popup.contains(e.target);
+      const clickedRing = panel.contains(e.target);
+
+      if (!clickedInsidePopup && !clickedRing) {
+        popup.style.display = 'none';
+      }
+    });
+
+    window.onload = function() {
+      loadProgress();
+      totalScore = progressData.totalScore;
+      updateAllProgressPanels();
+      document.getElementById('home-screen').style.display = 'flex';
+    };
+  
+    loadProgress();
+    updateAllProgressPanels();
+    initAudioUnlock();
+  </script>
+
+  <!-- Floating Read Button -->
+  <button id="btn-read-question" type="button" onclick="speakCurrentQuestion()">🔊 讀題</button>
+</body>
+</html>
